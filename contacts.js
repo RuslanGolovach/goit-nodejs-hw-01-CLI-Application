@@ -36,14 +36,16 @@ async function removeContact(contactId) {
     const data = await fs.readFile(contactsPath);
     const contacts = JSON.parse(data);
 
+    const idx = contacts.findIndex(item => item.id === Number(contactId));
+    if (idx === -1) {
+      return console.log(`Contact with id=${contactId} cannot be deleted`);
+    }
     const newContacts = contacts.filter(item => item.id !== Number(contactId));
-
     const contactsString = JSON.stringify(newContacts);
     await fs.writeFile(contactsPath, contactsString);
 
     console.table(newContacts);
-
-    return newContacts;
+    return contacts[idx];
   } catch (error) {
     console.log(error.message);
   }
@@ -54,8 +56,11 @@ async function addContact(name, email, phone) {
     const data = await fs.readFile(contactsPath);
     const contacts = JSON.parse(data);
 
+    const validId = id =>
+      contacts.some(item => item.id === id) ? validId(id + 1) : id;
+
     const info = { name, email, phone };
-    const newContact = { id: v4(), ...info };
+    const newContact = { id: validId(contacts.length), ...info };
     contacts.push(newContact);
 
     const contactsString = JSON.stringify(contacts);
